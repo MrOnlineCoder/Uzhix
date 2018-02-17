@@ -7,12 +7,9 @@
   See license in LICENSE file
 */
 
-#ifndef _LIBC_STDIO_H
-#define _LIBC_STDIO_H
+#ifndef _ISR_H
+#define _ISR_H
 
-#define EOF (-1)
-
-char putchar(char c);
-void printf(const char* restrict format, ...);
+void isr_install_exceptions();
 
 #endif

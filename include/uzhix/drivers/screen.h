@@ -7,8 +7,8 @@
   See license in LICENSE file
 */
 
-#ifndef _SCREEN_H
-#define _SCREEN_H
+#ifndef _SCREEN_DRIVER_H
+#define _SCREEN_DRIVER_H
 
 #define SCREEN_COLOR_BLACK 0
 #define SCREEN_COLOR_BLUE 1

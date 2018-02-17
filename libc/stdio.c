@@ -10,6 +10,7 @@
 #include <limits.h>
 #include <string.h>
 #include <stdarg.h>
+#include <stdlib.h>
 
 /*
   Version-dependent includes
@@ -37,78 +38,121 @@ char putchar(char c) {
 }
 
 
-static int print(const char* data, size_t length) {
-	const unsigned char* bytes = (const unsigned char*) data;
-	for (size_t i = 0; i < length; i++)
-		if (putchar(bytes[i]) == EOF)
-			return 0;
-	return 1;
+int is_format_letter(char c) {
+    return c == 'c' ||  c == 'd' || c == 'i' ||c == 'e' ||c == 'E' ||c == 'f' ||c == 'g' ||c == 'G' ||c == 'o' ||c == 's' || c == 'u' || c == 'x' || c == 'X' || c == 'p' || c == 'n';
+}
+
+void vsprintf_helper(char * str, const char * format, unsigned int* pos, va_list arg) {
+    char c;
+    int sign, ival, sys;
+    char buf[512];
+    unsigned int uval;
+    unsigned int size = 8;
+    unsigned int i;
+    int size_override = 0;
+    memset(buf, 0, 512);
+
+    while((c = *format++) != 0) {
+        sign = 0;
+
+        if(c == '%') {
+            c = *format++;
+            switch(c) {
+                case 'd':
+                case 'u':
+                case 'x':
+                case 'p':
+                    if(c == 'd' || c == 'u')
+                        sys = 10;
+                    else
+                        sys = 16;
+
+                    uval = ival = va_arg(arg, int);
+                    if(c == 'd' && ival < 0) {
+                        sign= 1;
+                        uval = -ival;
+                    }
+                    itoa(buf, uval, sys);
+                    unsigned int len = strlen(buf);
+                    // If use did not specify width, then just use len = width
+                    if(!size_override) size = len;
+                    if((c == 'x' || c == 'p' || c == 'd') && len < size) {
+                        for(i = 0; i < len; i++) {
+                            buf[size - 1 - i] = buf[len - 1 - i];
+                        }
+                        for(i = 0; i < size - len; i++) {
+                            buf[i] = '0';
+                        }
+                    }
+                    if(c == 'd' && sign) {
+                        if(str) {
+                            *(str + *pos) = '-';
+                            *pos = *pos + 1;
+                        }
+                        else
+                            putchar('-');
+                    }
+                    if(str) {
+                        strcpy(str + *pos, buf);
+                        *pos = *pos + strlen(buf);
+                    }
+                    else {
+                        char * t = buf;
+                        while(*t) {
+                            putchar(*t);
+                            t++;
+                        }
+                    }
+                    break;
+                case 'c':
+                    if(str) {
+                        *(str + *pos) = (char)va_arg(arg, int);
+                        *pos = *pos + 1;
+                    }
+                    else {
+                        putchar((char)va_arg(arg, int));
+                    }
+                    break;
+                case 's':
+                    if(str) {
+                        char * t = (char *) va_arg(arg, int);
+                        strcpy(str + (*pos), t);
+                        *pos = *pos + strlen(t);
+                    }
+                    else {
+                        char * t = (char *) va_arg(arg, int);
+                        while(*t) {
+                            putchar(*t);
+                            t++;
+                        }
+                    }
+                    break;
+                default:
+                    break;
+            }
+            continue;
+        }
+        if(str) {
+            *(str + *pos) = c;
+            *pos = *pos + 1;
+        }
+        else {
+            putchar(c);
+        }
+
+    }
 }
 
 
-int printf(const char* restrict format, ...) {
-	va_list parameters;
-	va_start(parameters, format);
+void vsprintf(char * str, const char * format, va_list arg) {
+    unsigned int pos = 0;
+    vsprintf_helper(str, format, &pos, arg);
+}
 
-	int written = 0;
 
-	while (*format != '\0') {
-		size_t maxrem = INT_MAX - written;
-
-		if (format[0] != '%' || format[1] == '%') {
-			if (format[0] == '%')
-				format++;
-			size_t amount = 1;
-			while (format[amount] && format[amount] != '%')
-				amount++;
-			if (maxrem < amount) {
-				// TODO: Set errno to EOVERFLOW.
-				return -1;
-			}
-			if (!print(format, amount))
-				return -1;
-			format += amount;
-			written += amount;
-			continue;
-		}
-
-		const char* format_begun_at = format++;
-
-		if (*format == 'c') {
-			format++;
-			char c = (char) va_arg(parameters, int /* char promotes to int */);
-			if (!maxrem) {
-				// TODO: Set errno to EOVERFLOW.
-				return -1;
-			}
-			if (!print(&c, sizeof(c)))
-				return -1;
-			written++;
-		} else if (*format == 's') {
-			format++;
-			const char* str = va_arg(parameters, const char*);
-			size_t len = strlen(str);
-			if (maxrem < len) {
-				// TODO: Set errno to EOVERFLOW.
-				return -1;
-			}
-			if (!print(str, len))
-				return -1;
-			written += len;
-		} else {
-			format = format_begun_at;
-			size_t len = strlen(format);
-			if (maxrem < len) {
-				// TODO: Set errno to EOVERFLOW.
-				return -1;
-			}
-			if (!print(format, len))
-				return -1;
-			written += len;
-			format += len;
-		}
-	}
-
-	va_end(parameters);
-	return written;
+void printf(const char* restrict format, ...) {
+    va_list ap;
+    va_start(ap, format);
+    vsprintf(NULL, format, ap);
+    va_end(ap);
 }

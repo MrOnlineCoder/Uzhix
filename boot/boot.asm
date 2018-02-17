@@ -4,7 +4,6 @@
 
 extern isr_exception
 
-%if 0
 global isr0
 global isr1
 global isr2
@@ -196,7 +195,6 @@ IRQH 12
 IRQH 13
 IRQH 14
 IRQH 15
-%endif
 
 global gdt_load
 extern gp
@@ -215,9 +213,8 @@ gdt_load:
 flush2:
     ret
 
-%if 0
-		global idt_load
-		extern idtp
+global idt_load
+extern idtp
 
 ; --------- Loads the IDT --------
 idt_load:
@@ -251,9 +248,3 @@ irq_routine:
     popa
     add esp, 8
     iret
-
-global read_eip
-read_eip:
-  pop eax
-  jmp eax
-%endif
