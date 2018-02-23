@@ -11,8 +11,9 @@ LDLIBS=build/libk.a
 BOOTFILES=$(OBJ)/multiboot.o $(OBJ)/boot.o
 KERNELFILES= $(OBJ)/kernel.o $(OBJ)/gdt.o $(OBJ)/io.o $(OBJ)/panic.o $(OBJ)/irq.o $(OBJ)/isr.o $(OBJ)/idt.o
 DRIVERS=$(OBJ)/screen.o $(OBJ)/pic.o $(OBJ)/cmos.o
+MMFILES=$(OBJ)/heap.o
 
-OBJFILES=$(BOOTFILES) $(KERNELFILES) $(DRIVERS)
+OBJFILES=$(BOOTFILES) $(KERNELFILES) $(DRIVERS) $(MMFILES)
 
 
 # === OBJECT FILES ===
@@ -32,25 +33,28 @@ kernel.o:
 	gcc -o $(OBJ)/kernel.o -c kernel/kmain.c $(CFLAGS)
 
 io.o:
-		gcc -o $(OBJ)/io.o -c kernel/io.c $(CFLAGS)
+	gcc -o $(OBJ)/io.o -c kernel/io.c $(CFLAGS)
 
 panic.o:
-		gcc -o $(OBJ)/panic.o -c kernel/panic.c $(CFLAGS)
+	gcc -o $(OBJ)/panic.o -c kernel/panic.c $(CFLAGS)
 
 irq.o:
-		gcc -o $(OBJ)/irq.o -c kernel/irq.c $(CFLAGS)
+	gcc -o $(OBJ)/irq.o -c kernel/irq.c $(CFLAGS)
 
 isr.o:
-		gcc -o $(OBJ)/isr.o -c kernel/isr.c $(CFLAGS)
+	gcc -o $(OBJ)/isr.o -c kernel/isr.c $(CFLAGS)
 
 pic.o:
-		gcc -o $(OBJ)/pic.o -c drivers/pic.c $(CFLAGS)
+	gcc -o $(OBJ)/pic.o -c drivers/pic.c $(CFLAGS)
 
 idt.o:
-		gcc -o $(OBJ)/idt.o -c kernel/idt.c $(CFLAGS)
+	gcc -o $(OBJ)/idt.o -c kernel/idt.c $(CFLAGS)
 
 cmos.o:
-		gcc -o $(OBJ)/cmos.o -c drivers/cmos.c $(CFLAGS)
+	gcc -o $(OBJ)/cmos.o -c drivers/cmos.c $(CFLAGS)
+
+heap.o:
+	gcc -o $(OBJ)/heap.o -c mm/heap.c $(CFLAGS)
 
 # == libc ==
 libk:
@@ -67,7 +71,7 @@ link:
 # === helper targets ===
 drivers: screen.o pic.o cmos.o
 
-krnl: kernel.o gdt.o io.o panic.o idt.o isr.o irq.o
+krnl: kernel.o gdt.o io.o panic.o idt.o isr.o irq.o heap.o
 
 irq: idt.o isr.o irq.o
 

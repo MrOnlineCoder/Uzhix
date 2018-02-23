@@ -17,8 +17,11 @@
 #include <uzhix/io.h>
 #include <uzhix/uzhix.h>
 #include <uzhix/drivers/cmos.h>
+#include <uzhix/heap.h>
 
 #include <stdio.h>
+
+heap_t heap;
 
 void kernel_main() {
   cli();
@@ -39,7 +42,9 @@ void kernel_main() {
 
   cmos_time tm;
   cmos_get_time(&tm);
-  printf("%d:%d:%d %d.%d.%d\n", tm.hours, tm.minutes, tm.seconds, tm.dayofmonth, tm.month, tm.year);
+  printf("time: %d:%d:%d %d.%d.%d\n", tm.hours, tm.minutes, tm.seconds, tm.dayofmonth, tm.month, tm.year);
+
+  printf("\n");
 
   panic("bye");
 }
