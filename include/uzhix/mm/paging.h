@@ -7,12 +7,10 @@
   See license in LICENSE file
 */
 
-#ifndef _LIBC_STDLIB_H
-#define _LIBC_STDLIB_H
+#ifndef _PAGING_H
+#define _PAGING_H
 
-#define NULL  ((void *) 0)
 
-void *malloc(size_t size);
-void free(void *ptr);
+void paging_enable();
 
 #endif

@@ -1,7 +1,7 @@
 # Uzhix C Standard Library Makefile
 
-CC=gcc
-AR=ar
+CC=i686-elf-gcc
+AR=i686-elf-ar
 KFLAGS=-ffreestanding -Wall -Wextra -D_uzhix_libk -std=c99 -Iinclude -I../include/ -o obj/$@
 
 stdio.o:

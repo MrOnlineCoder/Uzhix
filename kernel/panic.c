@@ -30,7 +30,7 @@ void panic(const char* msg) {
 
   screen_set_color(SCREEN_COLOR_WHITE, SCREEN_COLOR_RED);
 
-  printf("Kernel panic: %s\n", msg);
+  printf("  kernel panic: %s\n", msg);
 
   halt();
 }

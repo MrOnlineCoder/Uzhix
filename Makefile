@@ -21,40 +21,40 @@ multiboot.o:
 	nasm -felf32 boot/multiboot.asm -o $(OBJ)/multiboot.o
 
 gdt.o:
-	gcc -o $(OBJ)/gdt.o -c kernel/gdt.c $(CFLAGS)
+	i686-elf-gcc -o $(OBJ)/gdt.o -c kernel/gdt.c $(CFLAGS)
 
 boot.o:
 	nasm -felf32 boot/boot.asm -o $(OBJ)/boot.o
 
 screen.o:
-	gcc -o $(OBJ)/screen.o -c drivers/screen.c $(CFLAGS)
+	i686-elf-gcc -o $(OBJ)/screen.o -c drivers/screen.c $(CFLAGS)
 
 kernel.o:
-	gcc -o $(OBJ)/kernel.o -c kernel/kmain.c $(CFLAGS)
+	i686-elf-gcc -o $(OBJ)/kernel.o -c kernel/kmain.c $(CFLAGS)
 
 io.o:
-	gcc -o $(OBJ)/io.o -c kernel/io.c $(CFLAGS)
+	i686-elf-gcc -o $(OBJ)/io.o -c kernel/io.c $(CFLAGS)
 
 panic.o:
-	gcc -o $(OBJ)/panic.o -c kernel/panic.c $(CFLAGS)
+	i686-elf-gcc -o $(OBJ)/panic.o -c kernel/panic.c $(CFLAGS)
 
 irq.o:
-	gcc -o $(OBJ)/irq.o -c kernel/irq.c $(CFLAGS)
+	i686-elf-gcc -o $(OBJ)/irq.o -c kernel/irq.c $(CFLAGS)
 
 isr.o:
-	gcc -o $(OBJ)/isr.o -c kernel/isr.c $(CFLAGS)
+	i686-elf-gcc -o $(OBJ)/isr.o -c kernel/isr.c $(CFLAGS)
 
 pic.o:
-	gcc -o $(OBJ)/pic.o -c drivers/pic.c $(CFLAGS)
+	i686-elf-gcc -o $(OBJ)/pic.o -c drivers/pic.c $(CFLAGS)
 
 idt.o:
-	gcc -o $(OBJ)/idt.o -c kernel/idt.c $(CFLAGS)
+	i686-elf-gcc -o $(OBJ)/idt.o -c kernel/idt.c $(CFLAGS)
 
 cmos.o:
-	gcc -o $(OBJ)/cmos.o -c drivers/cmos.c $(CFLAGS)
+	i686-elf-gcc -o $(OBJ)/cmos.o -c drivers/cmos.c $(CFLAGS)
 
 heap.o:
-	gcc -o $(OBJ)/heap.o -c mm/heap.c $(CFLAGS)
+	i686-elf-gcc -o $(OBJ)/heap.o -c mm/heap.c $(CFLAGS)
 
 # == libc ==
 libk:
@@ -66,7 +66,7 @@ prepare:
 	echo mkdir -p obj
 
 link:
-	ld -m elf_i386 -o $(OUT)/uzhix.img -T link.ld $(OBJFILES) $(LDLIBS)
+	i686-elf-gcc -T link.ld -o $(OUT)/uzhix.img -ffreestanding -O2 -nostdlib $(OBJFILES) $(LDLIBS) -lgcc
 
 # === helper targets ===
 drivers: screen.o pic.o cmos.o

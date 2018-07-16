@@ -17,34 +17,50 @@
 #include <uzhix/io.h>
 #include <uzhix/uzhix.h>
 #include <uzhix/drivers/cmos.h>
-#include <uzhix/heap.h>
+#include <uzhix/mm/heap.h>
 
 #include <stdio.h>
-
-heap_t heap;
+#include <stdlib.h>
 
 void kernel_main() {
   cli();
   screen_init();
 
-  printf("* Uzhix ver.%s *\n", UZHIX_VERSION);
+  printf("* Uzhix ver.%s *\n\n", UZHIX_VERSION);
 
-  printf("installing GDT...\n");
+  printf("Installing GDT -> ");
   gdt_install();
+  printf("OK\n");
 
-  printf("installing IDT and handlers...\n");
+  printf("Installing IDT and handlers -> ");
   idt_install();
   isr_install_exceptions();
   irq_install();
+  printf("OK\n");
 
-  printf("enabling interrupts...\n");
-  sti();
+  printf("Initializing kernel heap -> ");
+  kernel_heap_init();
+  printf("OK\n");
 
   cmos_time tm;
   cmos_get_time(&tm);
-  printf("time: %d:%d:%d %d.%d.%d\n", tm.hours, tm.minutes, tm.seconds, tm.dayofmonth, tm.month, tm.year);
+  printf("System time is: %d:%d:%d %d.%d.%d\n", tm.hours, tm.minutes, tm.seconds, tm.dayofmonth, tm.month, tm.year);
+
+  kernel_heap_dump();
+
+  unsigned char* ptr = kernel_heap_alloc(4);
+  unsigned char* ptr2 = kernel_heap_alloc(1024);
+  ptr[0] = 'H';
+  ptr[1] = 'I';
+  ptr[2] = '\0';
+
+  kernel_heap_dump();
+  kernel_heap_free(ptr);
+  kernel_heap_free(ptr2);
+  kernel_heap_dump();
+  printf("%s\n", ptr);
 
   printf("\n");
 
-  panic("bye");
+  panic("failed to start init task");
 }

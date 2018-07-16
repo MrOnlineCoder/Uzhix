@@ -10,7 +10,7 @@
 #ifndef _LIBC_STRING_H
 #define _LIBC_STRING_H
 
-typedef unsigned int size_t;
+typedef unsigned long size_t;
 
 void* memcpy(void* dest, const void* src, size_t n);
 int memcmp(const void* s1, const void* s2, size_t n);

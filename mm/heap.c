@@ -7,25 +7,34 @@
   See license in LICENSE file
 */
 
-#include <uzhix/heap.h>
+#include <uzhix/mm/heap.h>
 #include <uzhix/io.h>
+#include <uzhix/uzhix.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <stdint.h>
+#include <limits.h>
+
+heap_t kernel_heap;
 
 /*
   Heap structure
   -----------------------------------------------------
-  01 32 **32 bytes of data** | free memory
+  FL SZ16 **SZ bytes of data** | free memory
   -----------------------------------------------------
-  01 - means ALLOCTED
-  32 - size of the block
+  FL - is block free or not? (uint_8)
+  SZ16 - size of the block (uint_16 or 2 bytes)
 */
 
-void* heap_alloc(heap_t* hp, size_t size) {
+void* heap_alloc(heap_t* hp, size_t sz) {
   unsigned char* ptr = hp->base;
+  uint16_t size = (uint16_t) sz;
 
+  if (size > USHRT_MAX || size < 1) {
+    return NULL;
+  }
 
   while (ptr < hp->end) {
     //search for the block
@@ -33,20 +42,21 @@ void* heap_alloc(heap_t* hp, size_t size) {
     //we found free block
     if (ptr[0] == HEAP_FLAG_FREE) {
       //check it's size
-      unsigned char bsz = ptr[1];
+      uint16_t bsz = MAKE_WORD(ptr[1], ptr[2]);
 
       //if it perfectly fits our block - flag and return
       if (bsz == size || bsz == 0) {
         ptr[0] = HEAP_FLAG_ALLOCATED;
-        ptr[1] = size;
+        ptr[1] = WORD_HIGH(size);
+        ptr[2] = WORD_LOW(size);
 
-        return ptr + 2;
+        return ptr + HEAP_METADATA_SIZE;
       }
 
       //block is not large enough, skip it
       //accept if this block wasn't touched
       if (bsz < size) {
-        ptr += bsz + 2; //+2 is 2 bytes: allocated/free block marker and size of the block
+        ptr += bsz + HEAP_METADATA_SIZE; //+3 is 3 bytes: allocated/free block marker and size of the block
         continue;
       }
 
@@ -56,24 +66,30 @@ void* heap_alloc(heap_t* hp, size_t size) {
         //nevertheless, if second block is smaller than 3 bytes (can only fit metadata) - then give more memory
         if (bsz - size < 3) {
           ptr[0] = HEAP_FLAG_ALLOCATED;
-          ptr[1] = bsz;
+          ptr[1] = WORD_HIGH(bsz);
+          ptr[2] = WORD_LOW(bsz);
 
-          return ptr + 2;
+          return ptr + HEAP_METADATA_SIZE;
         }
 
 
         //divide blocks
         ptr[0] = HEAP_FLAG_ALLOCATED;
-        ptr[1] = size;
+        ptr[1] = WORD_HIGH(size);
+        ptr[2] = WORD_LOW(size);
 
         ptr[2 + size] = HEAP_FLAG_FREE;
-        ptr[2 + size + 1] = bsz - size;
+        ptr[2 + size + 1] = WORD_HIGH((bsz - size));
+        ptr[2 + size + 2] = WORD_LOW((bsz - size));
 
-        return ptr + 2;
+        return ptr + HEAP_METADATA_SIZE;
       }
     } else if (ptr[0] == HEAP_FLAG_ALLOCATED) {
-      ptr += ptr[1] + 2;
+      ptr += MAKE_WORD(ptr[1], ptr[2]) + HEAP_METADATA_SIZE;
       continue;
+    } else {
+      heap_dump(hp);
+      panic("heap flag byte corrupted");
     }
   }
 
@@ -86,8 +102,8 @@ void heap_free(heap_t* hp, void* ptr) {
   if (p > hp->end) return;
 
   //find block marker
-  if (p[-2] == HEAP_FLAG_ALLOCATED) {
-    p[-2] = HEAP_FLAG_FREE;
+  if (p[-HEAP_METADATA_SIZE] == HEAP_FLAG_ALLOCATED) {
+    p[-HEAP_METADATA_SIZE] = HEAP_FLAG_FREE;
     //memset(p, 0, p[-1]);
   }
 }
@@ -110,20 +126,41 @@ void heap_dump(heap_t* hp) {
 
   while (ptr < hp->end) {
     if (ptr[0] == HEAP_FLAG_ALLOCATED) {
-      printf("block %d: allocated, start=%p size=%d\n", block, ptr, ptr[1]);
+      printf("block %d: allocated, start=%p size=%d\n", block, ptr, MAKE_WORD(ptr[1], ptr[2]));
       block++;
-      ptr += ptr[1] + 2;
+      ptr += MAKE_WORD(ptr[1], ptr[2]) + HEAP_METADATA_SIZE;
     } else {
       if (ptr[0] == HEAP_FLAG_FREE) {
-        printf("block %d: free, start=%p, size=%d\n", block, ptr, ptr[1]);
-        if (ptr[1] == 0) {
+        printf("block %d: free, start=%p, size=%d\n", block, ptr, MAKE_WORD(ptr[1], ptr[2]));
+        if (MAKE_WORD(ptr[1], ptr[2]) == 0) {
           printf("* end block *\n");
-          break;
           return;
         }
         block++;
-        ptr += ptr[1] + 2;
+        ptr += MAKE_WORD(ptr[1], ptr[2]) + HEAP_METADATA_SIZE;
       }
     }
   }
+}
+
+/*
+===================
+  Kernel heap
+===================
+*/
+
+void kernel_heap_init() {
+  heap_init(&kernel_heap, HEAP_START, HEAP_SIZE);
+}
+
+void* kernel_heap_alloc(size_t sz) {
+  return heap_alloc(&kernel_heap, sz);
+}
+
+void kernel_heap_free(void* ptr) {
+  heap_free(&kernel_heap, ptr);
+}
+
+void kernel_heap_dump() {
+  heap_dump(&kernel_heap);
 }

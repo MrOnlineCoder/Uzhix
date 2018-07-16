@@ -39,4 +39,6 @@ void screen_putchar(char c);
 
 void screen_set_color(unsigned char bg, unsigned char fg);
 
+void screen_scroll();
+
 #endif
