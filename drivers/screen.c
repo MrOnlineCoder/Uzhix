@@ -15,7 +15,7 @@ unsigned char cursor_x;
 unsigned char cursor_y;
 unsigned char screen_color;
 
-int rowSize = SCREEN_WIDTH*2; //how much memory 1 row takes 
+int rowSize = SCREEN_WIDTH*2; //how much memory 1 row takes
 
 static unsigned int get_memory_pos() {
   return (cursor_x + cursor_y * SCREEN_WIDTH) * 2;
@@ -70,7 +70,7 @@ void screen_scroll() {
 		int i = rowSize; /* Starting position */
 
 		/*Move every char a row up*/
-		while (i < SCREEN_WIDTH*SCREEN_HEIGHT*2) {
+		while (i < SCREEN_WIDTH*(SCREEN_HEIGHT-1)*2) {
 			video_mem[i-rowSize] = video_mem[i];
 			i++;
 		}

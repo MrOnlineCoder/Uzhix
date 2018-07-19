@@ -18,6 +18,7 @@
 #include <uzhix/uzhix.h>
 #include <uzhix/drivers/cmos.h>
 #include <uzhix/mm/heap.h>
+#include <uzhix/mm/paging.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,37 +29,26 @@ void kernel_main() {
 
   printf("* Uzhix ver.%s *\n\n", UZHIX_VERSION);
 
-  printf("Installing GDT -> ");
+  printf("Installing GDT...\n");
   gdt_install();
-  printf("OK\n");
 
-  printf("Installing IDT and handlers -> ");
+  printf("Installing IDT and handlers... \n");
   idt_install();
   isr_install_exceptions();
   irq_install();
-  printf("OK\n");
 
-  printf("Initializing kernel heap -> ");
+  printf("Initializing kernel heap... \n");
   kernel_heap_init();
-  printf("OK\n");
+
+  printf("Identity mapping the first 4MB... \n");
+  paging_identity_map_kernel();
+
+  printf("Enabling paging...\n");
+  paging_enable();
 
   cmos_time tm;
   cmos_get_time(&tm);
-  printf("System time is: %d:%d:%d %d.%d.%d\n", tm.hours, tm.minutes, tm.seconds, tm.dayofmonth, tm.month, tm.year);
-
-  kernel_heap_dump();
-
-  unsigned char* ptr = kernel_heap_alloc(4);
-  unsigned char* ptr2 = kernel_heap_alloc(1024);
-  ptr[0] = 'H';
-  ptr[1] = 'I';
-  ptr[2] = '\0';
-
-  kernel_heap_dump();
-  kernel_heap_free(ptr);
-  kernel_heap_free(ptr2);
-  kernel_heap_dump();
-  printf("%s\n", ptr);
+  printf("CMOS time is: %d:%d:%d %d.%d.%d\n", tm.hours, tm.minutes, tm.seconds, tm.dayofmonth, tm.month, tm.year);
 
   printf("\n");
 

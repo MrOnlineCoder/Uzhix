@@ -11,7 +11,7 @@ LDLIBS=build/libk.a
 BOOTFILES=$(OBJ)/multiboot.o $(OBJ)/boot.o
 KERNELFILES= $(OBJ)/kernel.o $(OBJ)/gdt.o $(OBJ)/io.o $(OBJ)/panic.o $(OBJ)/irq.o $(OBJ)/isr.o $(OBJ)/idt.o
 DRIVERS=$(OBJ)/screen.o $(OBJ)/pic.o $(OBJ)/cmos.o
-MMFILES=$(OBJ)/heap.o
+MMFILES=$(OBJ)/heap.o $(OBJ)/paging.o
 
 OBJFILES=$(BOOTFILES) $(KERNELFILES) $(DRIVERS) $(MMFILES)
 
@@ -53,8 +53,14 @@ idt.o:
 cmos.o:
 	i686-elf-gcc -o $(OBJ)/cmos.o -c drivers/cmos.c $(CFLAGS)
 
+
+# == memory manager ==
 heap.o:
 	i686-elf-gcc -o $(OBJ)/heap.o -c mm/heap.c $(CFLAGS)
+
+paging.o:
+	i686-elf-gcc -o $(OBJ)/paging.o -c mm/paging.c $(CFLAGS)
+
 
 # == libc ==
 libk:
@@ -71,14 +77,16 @@ link:
 # === helper targets ===
 drivers: screen.o pic.o cmos.o
 
-krnl: kernel.o gdt.o io.o panic.o idt.o isr.o irq.o heap.o
+mm: heap.o paging.o
+
+krnl: kernel.o gdt.o io.o panic.o idt.o isr.o irq.o
 
 irq: idt.o isr.o irq.o
 
 asm: multiboot.o boot.o
 
 ###################################################################################################
-Image: prepare asm krnl drivers link
+Image: prepare asm krnl mm drivers link
 ###################################################################################################
 
 # === ISO ===

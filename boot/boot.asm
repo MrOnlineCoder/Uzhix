@@ -221,6 +221,17 @@ idt_load:
     lidt [idtp]
     ret
 
+; ------- Sets CR3 to current_pagedir from mm/paging.c and enables paging ------
+global paging_load
+extern _current_pagedir_addr
+
+paging_load:
+	mov ecx, _current_pagedir_addr
+	mov eax, _current_pagedir_addr
+	mov cr3, eax
+	;mov eax, cr0
+	;or eax, 0x80000001
+	;mov cr0, eax
 
 ; --------- Calls C IRQ handler --------
 extern irq_handler
@@ -248,3 +259,7 @@ irq_routine:
     popa
     add esp, 8
     iret
+
+infloop:
+	hlt
+	jmp infloop

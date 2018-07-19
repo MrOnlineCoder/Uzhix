@@ -1,0 +1,1 @@
+make asm mm krnl link && ./qemu.bat
