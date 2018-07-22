@@ -1,0 +1,25 @@
+Uzhix Memory Model (x86 i386)
+-----------------------------
+
+0 > > > > > > > > > > > > > > > > > > > > > 4 GB
+----------------------------------------------->
+BOOT | KERNEL | KHEAP | ***** FREE MEMORY *****
+----------------------------------------------->
+
+[BOOT] - BIOS, GRUB, video memory-mapped IO. 1 MB in size. Identity mapped
+[KERNEL] - kernel code itself. 2 MB in size. Identity mapped
+[KHEAP] - kernel heap for various objects. 1 mb in size Identity mapped.
+[FREE MEMORY] - not *directly* used by kernel memory. Will contain BOTH paging structures (aligned) and userspace code
+
+Memory Info:
+* Paging enabled.
+* Pages are 4KB in size.
+* There is always a kernel page directory and kernel page table which identity map first 4 MB
+
+Typical workflow:
+
+1. Page fault occured / heap tried to allocate unmapped region of memory
+2. Heap/ISR handler asks VMM to map the page
+3. VMM asks PMM to allocate page (and paging structures if needed)
+4. VMM maps the needed page
+5. Heap returns valid address to free block of memory

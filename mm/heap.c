@@ -96,6 +96,14 @@ void* heap_alloc(heap_t* hp, size_t sz) {
   return NULL;
 }
 
+size_t heap_buffer_size(void* ptr) {
+  unsigned char* p = (unsigned char* ) (ptr-HEAP_METADATA_SIZE);
+
+  uint16_t size = MAKE_WORD(p[1], p[2]);
+
+  return size;
+}
+
 void heap_free(heap_t* hp, void* ptr) {
   unsigned char* p = (unsigned char* ) ptr;
 
@@ -150,7 +158,7 @@ void heap_dump(heap_t* hp) {
 */
 
 void kernel_heap_init() {
-  heap_init(&kernel_heap, HEAP_START, HEAP_SIZE);
+  heap_init(&kernel_heap, KERNEL_HEAP_START, KERNEL_HEAP_SIZE);
 }
 
 void* kernel_heap_alloc(size_t sz) {

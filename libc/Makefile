@@ -10,8 +10,11 @@ stdio.o:
 string.o:
 	$(CC) $(KFLAGS) -c string.c
 
-libk: stdio.o string.o
-	$(AR) rcsv ../build/libk.a obj/stdio.o obj/string.o
+stdlib.o:
+	$(CC) $(KFLAGS) -c stdlib.c
+
+libk: stdio.o string.o stdlib.o
+	$(AR) rcsv ../build/libk.a obj/stdio.o obj/string.o obj/stdlib.o
 
 libc:
 	echo Error: No libc avaliable to build right now!

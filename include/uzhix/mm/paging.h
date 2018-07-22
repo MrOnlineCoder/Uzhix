@@ -55,10 +55,8 @@ void paging_setentry(uintptr_t* ptr, physaddr_t addr, uint32_t flags);
 extern void paging_load();
 void paging_enable();
 
-void paging_map(virtaddr_t virt, physaddr_t phys);
+void vm_map_page(virtaddr_t virt, physaddr_t phys);
 
-void paging_identity_map_kernel();
-
-void paging_test();
+void vm_identity_map_kernel();
 
 #endif

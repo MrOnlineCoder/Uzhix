@@ -7,11 +7,12 @@ OBJ=obj
 OUT=build
 CFLAGS=-std=c99 -static -O2 -ffreestanding -Iinclude -Wall -Ilibc/include -Lbuild -llibk
 LDLIBS=build/libk.a
+CC=i686-elf-gcc
 
 BOOTFILES=$(OBJ)/multiboot.o $(OBJ)/boot.o
 KERNELFILES= $(OBJ)/kernel.o $(OBJ)/gdt.o $(OBJ)/io.o $(OBJ)/panic.o $(OBJ)/irq.o $(OBJ)/isr.o $(OBJ)/idt.o
 DRIVERS=$(OBJ)/screen.o $(OBJ)/pic.o $(OBJ)/cmos.o
-MMFILES=$(OBJ)/heap.o $(OBJ)/paging.o
+MMFILES=$(OBJ)/heap.o $(OBJ)/paging.o $(OBJ)/pmm.o
 
 OBJFILES=$(BOOTFILES) $(KERNELFILES) $(DRIVERS) $(MMFILES)
 
@@ -21,45 +22,48 @@ multiboot.o:
 	nasm -felf32 boot/multiboot.asm -o $(OBJ)/multiboot.o
 
 gdt.o:
-	i686-elf-gcc -o $(OBJ)/gdt.o -c kernel/gdt.c $(CFLAGS)
+	$(CC) -o $(OBJ)/gdt.o -c kernel/gdt.c $(CFLAGS)
 
 boot.o:
 	nasm -felf32 boot/boot.asm -o $(OBJ)/boot.o
 
 screen.o:
-	i686-elf-gcc -o $(OBJ)/screen.o -c drivers/screen.c $(CFLAGS)
+	$(CC) -o $(OBJ)/screen.o -c drivers/screen.c $(CFLAGS)
 
 kernel.o:
-	i686-elf-gcc -o $(OBJ)/kernel.o -c kernel/kmain.c $(CFLAGS)
+	$(CC) -o $(OBJ)/kernel.o -c kernel/kmain.c $(CFLAGS)
 
 io.o:
-	i686-elf-gcc -o $(OBJ)/io.o -c kernel/io.c $(CFLAGS)
+	$(CC) -o $(OBJ)/io.o -c kernel/io.c $(CFLAGS)
 
 panic.o:
-	i686-elf-gcc -o $(OBJ)/panic.o -c kernel/panic.c $(CFLAGS)
+	$(CC) -o $(OBJ)/panic.o -c kernel/panic.c $(CFLAGS)
 
 irq.o:
-	i686-elf-gcc -o $(OBJ)/irq.o -c kernel/irq.c $(CFLAGS)
+	$(CC) -o $(OBJ)/irq.o -c kernel/irq.c $(CFLAGS)
 
 isr.o:
-	i686-elf-gcc -o $(OBJ)/isr.o -c kernel/isr.c $(CFLAGS)
+	$(CC) -o $(OBJ)/isr.o -c kernel/isr.c $(CFLAGS)
 
 pic.o:
-	i686-elf-gcc -o $(OBJ)/pic.o -c drivers/pic.c $(CFLAGS)
+	$(CC) -o $(OBJ)/pic.o -c drivers/pic.c $(CFLAGS)
 
 idt.o:
-	i686-elf-gcc -o $(OBJ)/idt.o -c kernel/idt.c $(CFLAGS)
+	$(CC) -o $(OBJ)/idt.o -c kernel/idt.c $(CFLAGS)
 
 cmos.o:
-	i686-elf-gcc -o $(OBJ)/cmos.o -c drivers/cmos.c $(CFLAGS)
+	$(CC) -o $(OBJ)/cmos.o -c drivers/cmos.c $(CFLAGS)
 
 
 # == memory manager ==
 heap.o:
-	i686-elf-gcc -o $(OBJ)/heap.o -c mm/heap.c $(CFLAGS)
+	$(CC) -o $(OBJ)/heap.o -c mm/heap.c $(CFLAGS)
 
 paging.o:
-	i686-elf-gcc -o $(OBJ)/paging.o -c mm/paging.c $(CFLAGS)
+	$(CC) -o $(OBJ)/paging.o -c mm/paging.c $(CFLAGS)
+
+pmm.o:
+	$(CC) -o $(OBJ)/pmm.o -c mm/pmm.c $(CFLAGS)
 
 
 # == libc ==
@@ -72,12 +76,12 @@ prepare:
 	echo mkdir -p obj
 
 link:
-	i686-elf-gcc -T link.ld -o $(OUT)/uzhix.img -ffreestanding -O2 -nostdlib $(OBJFILES) $(LDLIBS) -lgcc
+	$(CC) -T link.ld -o $(OUT)/uzhix.img -ffreestanding -O2 -nostdlib $(OBJFILES) $(LDLIBS) -lgcc
 
 # === helper targets ===
 drivers: screen.o pic.o cmos.o
 
-mm: heap.o paging.o
+mm: heap.o paging.o pmm.o
 
 krnl: kernel.o gdt.o io.o panic.o idt.o isr.o irq.o
 
